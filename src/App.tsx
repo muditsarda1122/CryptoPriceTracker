@@ -30,9 +30,11 @@ ChartJS.register(
 function App() {
   // we want cryptos to be an arrAY OF Crypto or null
   const [cryptos, setCryptos] = useState<Crypto[] | null>();
-  const [selectedState, setSelectedState] = useState<Crypto | null>();
-  const [data, setData] = useState<ChartData<"line">>();
+  const [selectedState, setSelectedState] = useState<Crypto[]>([]);
   const [range, setRange] = useState<number>(30);
+
+  /*
+  const [data, setData] = useState<ChartData<"line">>();
   const [options, setOptions] = useState<ChartOptions<"line">>({
     responsive: true,
     plugins: {
@@ -45,6 +47,7 @@ function App() {
       },
     },
   });
+  */
 
   useEffect(() => {
     const url =
@@ -60,6 +63,7 @@ function App() {
       });
   }, []);
 
+  /*
   useEffect(() => {
     if (!selectedState) return;
     axios
@@ -119,14 +123,23 @@ function App() {
         console.log("error fetching data: ", error);
       });
   }, [selectedState, range]);
+  */
+
+  function updateOwned(crypto: Crypto, amount: number): void {
+    let temp = [...selectedState];
+    let tempObj = temp.find((c) => c.id === crypto.id);
+    if (tempObj) {
+      tempObj.owned = amount;
+    }
+  }
 
   return (
     <>
       <div className="App">
         <select
           onChange={(e) => {
-            const c = cryptos?.find((x) => x.id === e.target.value);
-            setSelectedState(c);
+            const c = cryptos?.find((x) => x.id === e.target.value) as Crypto;
+            setSelectedState([...selectedState, c]);
           }}
           defaultValue="default"
         >
@@ -141,22 +154,34 @@ function App() {
               })
             : null}
         </select>
-        <select
-          onChange={(e) => {
-            setRange(parseInt(e.target.value));
-          }}
-        >
-          <option value={30}>30 days</option>
-          <option value={7}>7 days</option>
-          <option value={1}>1 day</option>
-        </select>
       </div>
-      {selectedState ? <CryptoSummary crypto={selectedState} /> : null}
-      {data ? (
+      {selectedState.map((s) => {
+        return <CryptoSummary crypto={s} updateOwned={updateOwned} />;
+      })}
+      {/*selectedState ? <CryptoSummary crypto={selectedState} /> : null}
+      {/*data ? (
         <div style={{ width: 600 }}>
           <Line data={data} options={options} />
         </div>
-      ) : null}
+      ) : null*/}
+      {selectedState
+        ? "Your portfolio is worth $" +
+          selectedState
+            .map((s) => {
+              if (isNaN(s.owned)) {
+                return 0;
+              }
+              return s.current_price * s.owned;
+            })
+            .reduce((prev, current) => {
+              console.log("prev, current", prev, current);
+              return prev + current;
+            }, 0)
+            .toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+        : null}
     </>
   );
 }
