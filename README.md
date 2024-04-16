@@ -45,3 +45,7 @@ You can learn more in the [Create React App documentation](https://facebook.gith
 
 To learn React, check out the [React documentation](https://reactjs.org/).
 # CryptoPriceTracker
+
+A tracker to track the user's cryptocurrency holdings and give the total value of the holdings. Also depicts them in a pie chart for better visualisation. Made using Typescript and HTTP requests are made using Axios. Clone the repo and run: 
+### `npm start`
+to view the project on webpage. 
