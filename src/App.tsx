@@ -12,20 +12,13 @@ import {
   Title,
   Tooltip,
   Legend,
+  ArcElement,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Pie } from "react-chartjs-2";
 import type { ChartData, ChartOptions } from "chart.js";
 import moment from "moment";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function App() {
   // we want cryptos to be an arrAY OF Crypto or null
@@ -33,21 +26,7 @@ function App() {
   const [selectedState, setSelectedState] = useState<Crypto[]>([]);
   const [range, setRange] = useState<number>(30);
 
-  /*
-  const [data, setData] = useState<ChartData<"line">>();
-  const [options, setOptions] = useState<ChartOptions<"line">>({
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: true,
-        text: "Chart.js Line Chart",
-      },
-    },
-  });
-  */
+  const [data, setData] = useState<ChartData<"pie">>();
 
   useEffect(() => {
     const url =
@@ -63,73 +42,42 @@ function App() {
       });
   }, []);
 
-  /*
   useEffect(() => {
-    if (!selectedState) return;
-    axios
-      .get(
-        // `https://api.coingecko.com/api/v3/coins/${
-        //   selectedState?.id
-        // }/market_chart?vs_currency=usd&days=${range}&${
-        //   range === 1 ? `interval=hourly` : `interval=daily`
-        // }`,
-        range === 1
-          ? `https://api.coingecko.com/api/v3/coins/${selectedState?.id}/market_chart?vs_currency=usd&days=1`
-          : `https://api.coingecko.com/api/v3/coins/${selectedState?.id}/market_chart?vs_currency=usd&days=${range}&interval=daily`,
+    if (selectedState.length === 0) return;
+    setData({
+      labels: selectedState.map((s) => s.name),
+      datasets: [
         {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .then((response) => {
-        //setData()
-        console.log(response.data);
-        setData({
-          // labels are timestamps and data are the actual prices
-          labels: response.data.prices.map((price: number[]) => {
-            return moment
-              .unix(price[0] / 1000)
-              .format(range === 1 ? "HH:mm" : "MM-DD");
-          }),
-          datasets: [
-            {
-              label: "Dataset 1",
-              data: response.data.prices.map((price: number[]) => {
-                return price[1];
-              }),
-              borderColor: "rgb(255, 99, 132)",
-              backgroundColor: "rgba(255, 99, 132, 0.5)",
-            },
+          label: "# of Votes",
+          data: selectedState.map((s) => s.owned * s.current_price),
+          backgroundColor: [
+            "rgba(255, 99, 132, 0.2)",
+            "rgba(54, 162, 235, 0.2)",
+            "rgba(255, 206, 86, 0.2)",
+            "rgba(75, 192, 192, 0.2)",
+            "rgba(153, 102, 255, 0.2)",
+            "rgba(255, 159, 64, 0.2)",
           ],
-        });
-        setOptions({
-          responsive: true,
-          plugins: {
-            legend: {
-              display: false,
-            },
-            title: {
-              display: true,
-              text:
-                `${selectedState?.name}'s Price Over The Last ` +
-                range +
-                (range === 1 ? " Day." : " Days."),
-            },
-          },
-        });
-      })
-      .catch((error) => {
-        console.log("error fetching data: ", error);
-      });
-  }, [selectedState, range]);
-  */
+          borderColor: [
+            "rgba(255, 99, 132, 1)",
+            "rgba(54, 162, 235, 1)",
+            "rgba(255, 206, 86, 1)",
+            "rgba(75, 192, 192, 1)",
+            "rgba(153, 102, 255, 1)",
+            "rgba(255, 159, 64, 1)",
+          ],
+          borderWidth: 1,
+        },
+      ],
+    });
+  }, [selectedState]);
 
   function updateOwned(crypto: Crypto, amount: number): void {
     let temp = [...selectedState];
     let tempObj = temp.find((c) => c.id === crypto.id);
     if (tempObj) {
       tempObj.owned = amount;
+      setSelectedState(temp);
     }
   }
 
@@ -158,12 +106,13 @@ function App() {
       {selectedState.map((s) => {
         return <CryptoSummary crypto={s} updateOwned={updateOwned} />;
       })}
-      {/*selectedState ? <CryptoSummary crypto={selectedState} /> : null}
-      {/*data ? (
+
+      {data ? (
         <div style={{ width: 600 }}>
-          <Line data={data} options={options} />
+          <Pie data={data} />
         </div>
-      ) : null*/}
+      ) : null}
+
       {selectedState
         ? "Your portfolio is worth $" +
           selectedState
